@@ -1,0 +1,164 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Principal.master.cs" Inherits="Monolito_4bm.Principal" %>
+<!DOCTYPE html>
+<html lang="es">
+<head runat="server">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lotus System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --bg:      #f0eaf8;
+            --sidebar: #ffffff;
+            --purple:  #7c5cbf;
+            --purple2: #a78bda;
+            --light:   #ede9f6;
+            --text:    #2d2250;
+            --muted:   #9b8ec4;
+            --border:  #e4daf5;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        
+        /* SOLUCIÓN AL SCROLL EXTERIOR: Congela la pantalla al 100% alto del monitor */
+        html, body { 
+            height: 100% !important; 
+            overflow: hidden !important; 
+            background: var(--bg);
+        }
+
+        /* El formulario ahora es el contenedor flex principal que une Sidebar y Main */
+        #form1 {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Menú lateral fijo sin moverse de su sitio */
+        .sidebar { 
+            width: 220px; min-width: 220px; flex-shrink: 0; background: var(--sidebar);
+            border-right: 1px solid var(--border); display: flex; flex-direction: column;
+            padding: 28px 16px; height: 100vh; position: relative;
+        }
+
+        /* SOLUCIÓN A LA MITAD DE VISTA: El scroll se genera SOLAMENTE aquí adentro si el contenido es largo */
+        .main { 
+            flex: 1; 
+            min-width: 0; 
+            padding: 32px; 
+            height: 100vh;
+            overflow-y: auto !important; 
+            box-sizing: border-box;
+        }
+
+        .brand { display: flex; align-items: center; gap: 8px; font-size: 17px; font-weight: 800; color: var(--purple); margin-bottom: 28px; padding-left: 6px; }
+        .profile { display: flex; align-items: center; gap: 10px; background: var(--light); border-radius: 14px; padding: 10px 12px; margin-bottom: 28px; }
+        .profile-img  { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--purple2); }
+        .profile-icon { width: 40px; height: 40px; border-radius: 50%; background: var(--purple); color: white; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .profile-name { font-size: 12px; font-weight: 700; color: var(--text); }
+        .profile-role { font-size: 10px; color: var(--muted); }
+        .menu-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; padding: 0 6px; margin-bottom: 8px; }
+        .menu-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; margin-bottom: 2px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; transition: 0.2s; text-decoration: none; }
+        .menu-item:hover  { background: var(--light); color: var(--purple); }
+        .menu-item.active { background: var(--purple); color: white; }
+        .menu-item i { width: 16px; text-align: center; }
+        .menu-sep { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+        .btn-logout { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; margin-top: auto; font-size: 13px; font-weight: 600; color: #ef4444; cursor: pointer; background: transparent; border: none; width: 100%; transition: 0.2s; text-decoration: none; }
+        .btn-logout:hover { background: #fef2f2; }
+
+        .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+        .hello { font-size: 26px; font-weight: 800; color: var(--text); }
+        .hello span { color: var(--purple); }
+        .online-badge { display: flex; align-items: center; gap: 6px; background: white; border-radius: 20px; padding: 6px 14px; font-size: 12px; color: var(--muted); font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .dot-green { width: 8px; height: 8px; background: #10b981; border-radius: 50%; }
+
+        /* Estilos de tarjetas y grids comunes */
+        .welcome-card { background: linear-gradient(135deg, var(--purple), var(--purple2)); border-radius: 20px; padding: 24px 32px; margin-bottom: 24px; display: flex; align-items: center; gap: 20px; color: white; }
+        .welcome-foto { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid rgba(255,255,255,0.4); }
+        .welcome-icon { width: 70px; height: 70px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 32px; flex-shrink: 0; }
+        .welcome-info h2 { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+        .welcome-info p  { font-size: 12px; opacity: 0.85; }
+        .welcome-info small { font-size: 11px; opacity: 0.75; display: block; margin-top: 2px; }
+
+        .cards-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        .card { background: white; border-radius: 18px; box-shadow: 0 2px 12px rgba(124,92,191,0.08); overflow: hidden; padding: 24px; text-decoration: none; display: block; transition: 0.2s; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(124,92,191,0.15); }
+        .card-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: white; margin-bottom: 14px; }
+        .card-icon.purple { background: linear-gradient(135deg,#7c5cbf,#a78bda); }
+        .card-icon.green  { background: linear-gradient(135deg,#10b981,#059669); }
+        .card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+        .card-sub   { font-size: 12px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
+        .card-arrow { font-size: 12px; font-weight: 700; color: var(--purple); }
+
+        @media (max-width: 768px) {
+            #form1 { flex-direction: column; height: auto; overflow: auto; }
+            html, body { height: auto !important; overflow: auto !important; }
+            .sidebar { width: 100%; height: auto; position: relative; flex-direction: row; flex-wrap: wrap; }
+            .main { height: auto; overflow: visible; }
+            .cards-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+    <asp:ContentPlaceHolder ID="head" runat="server"></asp:ContentPlaceHolder>
+</head>
+<body>
+    <form id="form1" runat="server">
+        <div class="sidebar">
+            <div class="brand"><i class="fas fa-spa"></i> Lotus</div>
+
+            <div class="profile">
+                <asp:Image ID="img_sidebar" runat="server" CssClass="profile-img" Visible="false" />
+                <asp:Panel ID="pnl_sidebar_icon" runat="server" CssClass="profile-icon">
+                    <i id="icon_perfil_rol" runat="server" class="fas fa-user"></i>
+                </asp:Panel>
+                <div class="profile-info">
+                    <div class="profile-name"><asp:Label ID="lbl_nick_sidebar" runat="server" /></div>
+                    <div class="profile-role"><asp:Label ID="lbl_rol_sidebar" runat="server" /></div>
+                </div>
+            </div>
+
+            <div class="menu-label">Menú</div>
+            
+            <asp:PlaceHolder ID="pnl_menu_usuario" runat="server" Visible="false">
+                <a href="<%= ResolveUrl("~/Usuarios/MenuUsuario.aspx") %>" class="menu-item active"><i class="fas fa-home"></i> Inicio</a>
+                <a href="<%= ResolveUrl("~/Usuarios/Juego.aspx") %>" class="menu-item"><i class="fas fa-gamepad"></i> Juego</a>
+                <a href="#" class="menu-item"><i class="fas fa-user-circle"></i> Mi Perfil</a>
+            </asp:PlaceHolder>
+
+            <asp:PlaceHolder ID="pnl_menu_admin" runat="server" Visible="false">
+            <a href="<%= ResolveUrl("~/Admin/Dashboard.aspx") %>" class="menu-item active"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a href="<%= ResolveUrl("~/Mantenimiento/listar_tbl_producto.aspx") %>" class="menu-item"><i class="fas fa-box"></i> Productos</a>
+            <a href="<%= ResolveUrl("~/Mantenimiento/nuevo_tbl_producto.aspx") %>" class="menu-item"><i class="fas fa-plus-circle"></i> Nuevo Producto</a>
+            <a href="<%= ResolveUrl("~/Mantenimiento/listar_tbl_proveedor.aspx") %>" class="menu-item"><i class="fas fa-truck"></i> Proveedores</a>
+            <a href="<%= ResolveUrl("~/Mantenimiento/listar_tbl_imagen.aspx") %>" class="menu-item"><i class="fas fa-images"></i> Imágenes</a>
+            <a href="<%= ResolveUrl("~/Mantenimiento/subir_excel_producto.aspx") %>" class="menu-item"><i class="fas fa-file-excel"></i> Carga Masiva</a>
+            <a href="<%= ResolveUrl("~/Mantenimiento/nuevo_tbl_proveedor.aspx") %>" class="menu-item">
+             <i class="fas fa-plus-circle"></i> Nuevo Proveedor
+            </a>
+            <a href="#" class="menu-item"><i class="fas fa-users"></i> Usuarios</a>
+            <a href="#" class="menu-item"><i class="fas fa-shield-alt"></i> Seguridad</a>
+            </asp:PlaceHolder>
+
+            <hr class="menu-sep" />
+
+            <asp:LinkButton ID="btn_logout" runat="server" CssClass="btn-logout" OnClick="btn_logout_Click" CausesValidation="false">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </asp:LinkButton>
+        </div>
+
+        <div class="main">
+            <div class="topbar">
+                <div class="hello">
+                    HOLA, <span><asp:Label ID="lbl_primer_nombre" runat="server" /></span>
+                </div>
+                <div class="online-badge">
+                    <div class="dot-green"></div>
+                    En línea <asp:Label ID="lbl_badge_rol" runat="server" />
+                </div>
+            </div>
+
+            <asp:ContentPlaceHolder ID="cph_contenido" runat="server"></asp:ContentPlaceHolder>
+        </div>
+    </form>
+</body>
+</html>

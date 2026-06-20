@@ -1,0 +1,13 @@
+## Directorios de Compilación
+[Dd]ebug/
+[Rr]elease/
+bin/
+obj/
+## Archivos de caché y configuración de Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+## Paquetes NuGet descargados (se restauran automáticamente)
+packages/
