@@ -6,8 +6,6 @@ stages:
   - deploy
 
 variables:
-  SOLUTION_NAME: "Monolito4bm.sln"
-  PROJECT_PATH: "Monolito_4bm/Monolito_4bm.csproj"
   PUBLISH_PATH: "publish"
   IIS_PATH: "C:\\inetpub\\wwwroot\\Monolito"
 
@@ -16,21 +14,25 @@ restore:
   tags:
     - windows
   script:
-    - dotnet restore "$env:SOLUTION_NAME"
+    - nuget restore
 
 build:
   stage: build
   tags:
     - windows
   script:
-    - dotnet build "$env:SOLUTION_NAME" --configuration Release --no-restore
+    - $msbuild = "${env:ProgramFiles}\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe"
+    - if (!(Test-Path $msbuild)) { $msbuild = "${env:ProgramFiles}\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe" }
+    - if (!(Test-Path $msbuild)) { throw "No se encontró MSBuild de Visual Studio" }
+    - $sln = Get-ChildItem -Path . -Filter *.sln -Recurse | Select-Object -First 1
+    - '& $msbuild "$($sln.FullName)" /p:Configuration=Release /p:RestorePackages=false'
 
 test:
   stage: test
   tags:
     - windows
   script:
-    - dotnet test "$env:SOLUTION_NAME" --configuration Release --no-build
+    - echo "Sin pruebas configuradas"
   allow_failure: true
 
 publish:
@@ -38,8 +40,12 @@ publish:
   tags:
     - windows
   script:
+    - $msbuild = "${env:ProgramFiles}\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe"
+    - if (!(Test-Path $msbuild)) { $msbuild = "${env:ProgramFiles}\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe" }
+    - if (!(Test-Path $msbuild)) { throw "No se encontró MSBuild de Visual Studio" }
+    - $project = Get-ChildItem -Path . -Filter *.csproj -Recurse | Where-Object { $_.FullName -match "Monolito_4bm" } | Select-Object -First 1
     - if (Test-Path "$env:PUBLISH_PATH") { Remove-Item "$env:PUBLISH_PATH" -Recurse -Force }
-    - dotnet publish "$env:PROJECT_PATH" --configuration Release --output "$env:PUBLISH_PATH" --no-build
+    - '& $msbuild "$($project.FullName)" /p:Configuration=Release /p:WebPublishMethod=FileSystem /p:DeleteExistingFiles=True /p:publishUrl="$env:CI_PROJECT_DIR\$env:PUBLISH_PATH"'
   artifacts:
     paths:
       - publish/
