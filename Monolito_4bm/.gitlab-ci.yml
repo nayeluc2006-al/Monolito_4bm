@@ -7,7 +7,7 @@ stages:
 
 variables:
   SOLUTION_NAME: "Monolito4bm.sln"
-  PROJECT_PATH: "Monolito_4bm/Monolito_4bm"
+  PROJECT_PATH: "Monolito_4bm/Monolito_4bm.csproj"
   PUBLISH_PATH: "publish"
   IIS_PATH: "C:\\inetpub\\wwwroot\\Monolito"
 
@@ -16,21 +16,21 @@ restore:
   tags:
     - windows
   script:
-    - dotnet restore $env:SOLUTION_NAME
+    - dotnet restore "$env:SOLUTION_NAME"
 
 build:
   stage: build
   tags:
     - windows
   script:
-    - dotnet build $env:SOLUTION_NAME --configuration Release --no-restore
+    - dotnet build "$env:SOLUTION_NAME" --configuration Release --no-restore
 
 test:
   stage: test
   tags:
     - windows
   script:
-    - dotnet test $env:SOLUTION_NAME --configuration Release --no-build
+    - dotnet test "$env:SOLUTION_NAME" --configuration Release --no-build
   allow_failure: true
 
 publish:
@@ -38,12 +38,22 @@ publish:
   tags:
     - windows
   script:
-    - dotnet publish $env:PROJECT_PATH -c Release -o $env:PUBLISH_PATH
+    - if (Test-Path "$env:PUBLISH_PATH") { Remove-Item "$env:PUBLISH_PATH" -Recurse -Force }
+    - dotnet publish "$env:PROJECT_PATH" --configuration Release --output "$env:PUBLISH_PATH" --no-build
+  artifacts:
+    paths:
+      - publish/
+    expire_in: 1 week
 
 deploy:
   stage: deploy
   tags:
     - windows
+  dependencies:
+    - publish
   script:
-    - if (!(Test-Path $env:IIS_PATH)) { New-Item -ItemType Directory -Path $env:IIS_PATH }
-    - Copy-Item -Path "$env:PUBLISH_PATH\\*" -Destination $env:IIS_PATH -Recurse -Force
+    - if (!(Test-Path "$env:IIS_PATH")) { New-Item -ItemType Directory -Path "$env:IIS_PATH" -Force }
+    - Remove-Item "$env:IIS_PATH\*" -Recurse -Force -ErrorAction SilentlyContinue
+    - Copy-Item -Path "$env:PUBLISH_PATH\*" -Destination "$env:IIS_PATH" -Recurse -Force
+  only:
+    - main
