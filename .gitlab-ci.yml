@@ -6,8 +6,6 @@ stages:
   - deploy
 
 variables:
-  SOLUTION_NAME: "Monolito4bm.sln"
-  PROJECT_PATH: "Monolito_4bm/Monolito_4bm.csproj"
   PUBLISH_PATH: "publish"
   IIS_PATH: "C:\\inetpub\\wwwroot\\Monolito"
 
@@ -16,21 +14,27 @@ restore:
   tags:
     - windows
   script:
-    - dotnet restore "$env:SOLUTION_NAME"
+    - $sln = Get-ChildItem -Path . -Filter *.sln -Recurse | Select-Object -First 1
+    - if ($null -eq $sln) { throw "No se encontró ningún archivo .sln" }
+    - dotnet restore "$($sln.FullName)"
 
 build:
   stage: build
   tags:
     - windows
   script:
-    - dotnet build "$env:SOLUTION_NAME" --configuration Release --no-restore
+    - $sln = Get-ChildItem -Path . -Filter *.sln -Recurse | Select-Object -First 1
+    - if ($null -eq $sln) { throw "No se encontró ningún archivo .sln" }
+    - dotnet build "$($sln.FullName)" --configuration Release --no-restore
 
 test:
   stage: test
   tags:
     - windows
   script:
-    - dotnet test "$env:SOLUTION_NAME" --configuration Release --no-build
+    - $sln = Get-ChildItem -Path . -Filter *.sln -Recurse | Select-Object -First 1
+    - if ($null -eq $sln) { throw "No se encontró ningún archivo .sln" }
+    - dotnet test "$($sln.FullName)" --configuration Release --no-build
   allow_failure: true
 
 publish:
@@ -38,8 +42,10 @@ publish:
   tags:
     - windows
   script:
+    - $project = Get-ChildItem -Path . -Filter *.csproj -Recurse | Where-Object { $_.FullName -notmatch "\\bin\\|\\obj\\|Test|Tests" } | Select-Object -First 1
+    - if ($null -eq $project) { throw "No se encontró ningún archivo .csproj" }
     - if (Test-Path "$env:PUBLISH_PATH") { Remove-Item "$env:PUBLISH_PATH" -Recurse -Force }
-    - dotnet publish "$env:PROJECT_PATH" --configuration Release --output "$env:PUBLISH_PATH" --no-build
+    - dotnet publish "$($project.FullName)" --configuration Release --output "$env:PUBLISH_PATH"
   artifacts:
     paths:
       - publish/
