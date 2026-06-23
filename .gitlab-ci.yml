@@ -19,18 +19,19 @@ restore:
     - if ($null -eq $sln) { throw "No se encontró ningún archivo .sln" }
     - C:\Tools\nuget\nuget.exe restore "$($sln.FullName)"
 
-bbuild:
+build:
   stage: build
   tags:
     - windows
   script:
     - $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-    - if (!(Test-Path $vswhere)) { throw "No se encontró vswhere.exe. Instala Visual Studio Build Tools 2022." }
+    - if (!(Test-Path $vswhere)) { throw "No se encontró vswhere.exe." }
     - $msbuild = & $vswhere -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe | Select-Object -First 1
     - if (!(Test-Path $msbuild)) { throw "No se encontró MSBuild." }
     - $sln = Get-ChildItem -Path . -Filter *.sln -Recurse | Select-Object -First 1
     - if ($null -eq $sln) { throw "No se encontró ningún archivo .sln" }
-    - '& $msbuild "$($sln.FullName)" /p:Configuration=Release /restore'
+    - C:\Tools\nuget\nuget.exe restore "$($sln.FullName)" -PackagesDirectory packages
+    - '& $msbuild "$($sln.FullName)" /p:Configuration=Release'
     
 test:
   stage: test
