@@ -14,7 +14,10 @@ restore:
   tags:
     - windows
   script:
-    - nuget restore
+    - cd "$env:CI_PROJECT_DIR"
+    - $sln = Get-ChildItem -Path . -Filter *.sln -Recurse | Select-Object -First 1
+    - if ($null -eq $sln) { throw "No se encontró ningún archivo .sln" }
+    - C:\Tools\nuget\nuget.exe restore "$($sln.FullName)"
 
 build:
   stage: build
