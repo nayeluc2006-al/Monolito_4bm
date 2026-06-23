@@ -24,10 +24,12 @@ build:
   tags:
     - windows
   script:
-    - $msbuild = "${env:ProgramFiles}\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe"
-    - if (!(Test-Path $msbuild)) { $msbuild = "${env:ProgramFiles}\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe" }
-    - if (!(Test-Path $msbuild)) { throw "No se encontró MSBuild de Visual Studio" }
+    - $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+    - if (!(Test-Path $vswhere)) { throw "No se encontró vswhere.exe. Instala Visual Studio Build Tools 2022." }
+    - $msbuild = & $vswhere -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe | Select-Object -First 1
+    - if (!(Test-Path $msbuild)) { throw "No se encontró MSBuild. Instala MSBuild tools desde Visual Studio Installer." }
     - $sln = Get-ChildItem -Path . -Filter *.sln -Recurse | Select-Object -First 1
+    - if ($null -eq $sln) { throw "No se encontró ningún archivo .sln" }
     - '& $msbuild "$($sln.FullName)" /p:Configuration=Release /p:RestorePackages=false'
 
 test:
